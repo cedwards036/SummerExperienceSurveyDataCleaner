@@ -17,7 +17,7 @@ def parse_survey_file(filepath: str) -> List[dict]:
         file.seek(last_row_read)
 
     result = []
-    with open(filepath) as file:
+    with open(filepath, encoding='utf-8') as file:
         header = parse_header(file)
         _skip_subheader_rows(file)
         _skip_survey_preview_rows(file)
