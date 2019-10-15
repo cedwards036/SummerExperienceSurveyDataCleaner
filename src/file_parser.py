@@ -1,5 +1,6 @@
 from typing import List
 from collections import defaultdict
+import csv
 
 def parse_survey_file(filepath: str) -> List[dict]:
 
@@ -21,8 +22,9 @@ def parse_survey_file(filepath: str) -> List[dict]:
         header = parse_header(file)
         _skip_subheader_rows(file)
         _skip_survey_preview_rows(file)
-        for line in file:
-            row = dict(zip(header, _parse_line_into_list_of_str(line)))
+        csv_reader = csv.reader(file, delimiter=',', quotechar='"')
+        for line in csv_reader:
+            row = dict(zip(header, line))
             result.append(row)
     return result
 

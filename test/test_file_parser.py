@@ -20,3 +20,8 @@ class TestFileParser(unittest.TestCase):
         self.assertEqual('TU73R3', actual[0]['ExternalReference'])
         self.assertEqual('', actual[2]['Q1_9_TEXT'])
         self.assertEqual('No', actual[1]['Q17'])
+
+    def test_file_correctly_reads_quoted_fields(self):
+        actual = parse_survey_file(FILEPATH)
+        expected = 'Internship (a professional experience with a company or organization),Summer Job (working purely to earn money, e.g. as a waiter)'
+        self.assertEqual(expected, actual[1]['Q1'])
