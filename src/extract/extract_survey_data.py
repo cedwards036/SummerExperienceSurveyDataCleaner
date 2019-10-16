@@ -5,11 +5,10 @@ from src.extract.row_splitter import split_response_rows
 from src.extract.response_parser import parse_raw_responses
 from src.extract.row_differentiator import RowDifferentiator
 from src.survey_response import SurveyResponse
-from src.utils import load_config
 
-def extract_survey_data() -> List[SurveyResponse]:
+def extract_survey_data(raw_data_filepath: str) -> List[SurveyResponse]:
     row_differentiator = make_row_differentiator()
-    raw_data = parse_survey_file(load_config()['response_data_filepath'])
+    raw_data = parse_survey_file(raw_data_filepath)
     split_data = split_response_rows(raw_data, row_differentiator)
     return parse_raw_responses(split_data)
 
