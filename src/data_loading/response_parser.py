@@ -21,7 +21,7 @@ class RawResponseParser:
             research_subject=self._get_processed_value_or_none(self._raw_data['Q7'], self._keep_value_unchanged),
             length_in_weeks=self._get_processed_value_or_none(self._raw_data['Q8'], int),
             experience_was_paid=self._get_processed_value_or_none(self._raw_data['Q9'], self._response_is_yes),
-            pay_rate_usd=self._get_processed_value_or_none(self._raw_data['Q10'], int),
+            pay_rate_usd=self._get_processed_value_or_none(self._raw_data['Q10'], float),
             pay_frequency=self._get_value_from_combined_fields('Q10_2', 'Q10_5_TEXT', self._keep_value_unchanged),
             non_salary_benefits=self._get_list_from_combined_fields('Q11', 'Q11_4_TEXT'),
             received_grant_funding=self._get_processed_value_or_none(self._raw_data['Q19'], self._response_is_yes),
@@ -68,3 +68,6 @@ class RawResponseParser:
     @staticmethod
     def _keep_value_unchanged(value: str) -> str:
         return value
+
+def parse_raw_responses(raw_responses: List[dict]) -> List[SurveyResponse]:
+    return [RawResponseParser(response).parse() for response in raw_responses]
