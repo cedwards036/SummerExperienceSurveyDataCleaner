@@ -1,7 +1,7 @@
 import json
 
-from src.file_parser import parse_survey_file
-from src.row_splitter import split_response_rows
+from src.data_loading.file_parser import parse_survey_file
+from src.data_loading.row_splitter import split_response_rows
 from definitions import CONFIG_PATH
 
 def load_config() -> dict:

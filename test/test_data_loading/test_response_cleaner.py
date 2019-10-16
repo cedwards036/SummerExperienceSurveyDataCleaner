@@ -1,14 +1,15 @@
 import unittest
 from datetime import datetime
 
-from src.response_cleaner import SurveyResponse, create_survey_response
+from src.data_loading.response_parser import RawResponseParser
+from src.survey_response import SurveyResponse
 
 
 def assert_survey_responses_are_equal(test_obj, expected: SurveyResponse, actual: SurveyResponse):
     test_obj.assertEqual(expected.to_dict(), actual.to_dict())
 
 
-class TestResponseCleaner(unittest.TestCase):
+class TestResponseParser(unittest.TestCase):
 
     def test_create_survey_response_from_raw_data(self):
         test_data = {'StartDate': '2019-10-10 10:53:27', 'EndDate': '2019-10-13 23:39:48', 'Status': 'IP Address', 'IPAddress': '', 'Progress': '100', 'Duration (in seconds)': '305180',
@@ -32,7 +33,7 @@ class TestResponseCleaner(unittest.TestCase):
             experience_was_paid=True,
             pay_rate_usd=3400,
             pay_frequency='Bi-weekly',
-            non_salary_benefits='Free or subsidized housing',
+            non_salary_benefits=['Free or subsidized housing'],
             received_grant_funding=True,
             grant_org_name='The Camp Scholarship Foundation',
             grant_award_name='The Camp Scholarship',
@@ -42,7 +43,7 @@ class TestResponseCleaner(unittest.TestCase):
             supportive_staff='Professor Talreja was great!',
             is_willing_to_share_experience=True
         )
-        assert_survey_responses_are_equal(self, expected, create_survey_response(test_data))
+        assert_survey_responses_are_equal(self, expected, RawResponseParser(test_data).parse())
 
     def test_create_survey_response_translates_empty_str_to_none(self):
         test_data = {'StartDate': '', 'EndDate': '', 'Status': '', 'IPAddress': '', 'Progress': '', 'Duration (in seconds)': '',
@@ -52,7 +53,7 @@ class TestResponseCleaner(unittest.TestCase):
                      'Q4': '', 'Q5': '', 'Q6': '', 'Q7': '', 'Q8': '', 'Q9': '', 'Q10': '', 'Q10_2': '', 'Q10_5_TEXT': '',
                      'Q11': '', 'Q11_4_TEXT': '', 'Q19': '', 'Q12': '', 'Q13': '', 'Q14': '',
                      'Q15_NPS_GROUP': '', 'Q15': '', 'Q18': ''}
-        assert_survey_responses_are_equal(self, SurveyResponse(), create_survey_response(test_data))
+        assert_survey_responses_are_equal(self, SurveyResponse(), RawResponseParser(test_data).parse())
 
     def test_fields_with_other_freetext_are_merged_properly(self):
         test_data_with_others = {'StartDate': '', 'EndDate': '', 'Status': '', 'IPAddress': '', 'Progress': '', 'Duration (in seconds)': '',
@@ -60,11 +61,36 @@ class TestResponseCleaner(unittest.TestCase):
                                  'ExternalReference': '', 'LocationLatitude': '', 'LocationLongitude': '', 'DistributionChannel': '', 'UserLanguage': '',
                                  'Q1': 'Other', 'Q1_9_TEXT': 'Travelled to Mars', 'Q16': '', 'Q17': '', 'Q3': '',
                                  'Q4': '', 'Q5': '', 'Q6': '', 'Q7': '', 'Q8': '', 'Q9': '', 'Q10': '', 'Q10_2': 'Other', 'Q10_5_TEXT': 'I was paid before I started',
-                                 'Q11': 'Other', 'Q11_4_TEXT': 'Free Food', 'Q19': '', 'Q12': '', 'Q13': '', 'Q14': '',
+                                 'Q11': 'Other:', 'Q11_4_TEXT': 'Free Food', 'Q19': '', 'Q12': '', 'Q13': '', 'Q14': '',
                                  'Q15_NPS_GROUP': '', 'Q15': '', 'Q18': ''}
         expected = SurveyResponse(
             activity_type='Travelled to Mars',
             pay_frequency='I was paid before I started',
-            non_salary_benefits='Free Food'
+            non_salary_benefits=['Free Food']
         )
-        assert_survey_responses_are_equal(self, expected, create_survey_response(test_data_with_others))
+        assert_survey_responses_are_equal(self, expected, RawResponseParser(test_data_with_others).parse())
+
+    def test_multiple_non_salary_benefits_are_broken_into_list(self):
+        test_data_with_other = {'StartDate': '', 'EndDate': '', 'Status': '', 'IPAddress': '', 'Progress': '', 'Duration (in seconds)': '',
+                                 'Finished': '', 'RecordedDate': '', 'ResponseId': '', 'RecipientLastName': '', 'RecipientFirstName': '', 'RecipientEmail': '',
+                                 'ExternalReference': '', 'LocationLatitude': '', 'LocationLongitude': '', 'DistributionChannel': '', 'UserLanguage': '',
+                                 'Q1': '', 'Q1_9_TEXT': '', 'Q16': '', 'Q17': '', 'Q3': '',
+                                 'Q4': '', 'Q5': '', 'Q6': '', 'Q7': '', 'Q8': '', 'Q9': '', 'Q10': '', 'Q10_2': '', 'Q10_5_TEXT': '',
+                                 'Q11': 'Housing,Transportation,Other:', 'Q11_4_TEXT': 'Free Food', 'Q19': '', 'Q12': '', 'Q13': '', 'Q14': '',
+                                 'Q15_NPS_GROUP': '', 'Q15': '', 'Q18': ''}
+        expected_from_other = SurveyResponse(
+            non_salary_benefits=['Housing', 'Transportation', 'Free Food']
+        )
+        assert_survey_responses_are_equal(self, expected_from_other, RawResponseParser(test_data_with_other).parse())
+
+        test_plain_data = {'StartDate': '', 'EndDate': '', 'Status': '', 'IPAddress': '', 'Progress': '', 'Duration (in seconds)': '',
+                                'Finished': '', 'RecordedDate': '', 'ResponseId': '', 'RecipientLastName': '', 'RecipientFirstName': '', 'RecipientEmail': '',
+                                'ExternalReference': '', 'LocationLatitude': '', 'LocationLongitude': '', 'DistributionChannel': '', 'UserLanguage': '',
+                                'Q1': '', 'Q1_9_TEXT': '', 'Q16': '', 'Q17': '', 'Q3': '',
+                                'Q4': '', 'Q5': '', 'Q6': '', 'Q7': '', 'Q8': '', 'Q9': '', 'Q10': '', 'Q10_2': '', 'Q10_5_TEXT': '',
+                                'Q11': 'Housing,Transportation', 'Q11_4_TEXT': '', 'Q19': '', 'Q12': '', 'Q13': '', 'Q14': '',
+                                'Q15_NPS_GROUP': '', 'Q15': '', 'Q18': ''}
+        expected_from_plain = SurveyResponse(
+            non_salary_benefits=['Housing', 'Transportation']
+        )
+        assert_survey_responses_are_equal(self, expected_from_plain, RawResponseParser(test_plain_data).parse())

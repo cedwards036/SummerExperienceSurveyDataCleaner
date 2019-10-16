@@ -1,7 +1,8 @@
 import unittest
-from src.file_parser import parse_header, parse_survey_file
+import os
+from src.data_loading.file_parser import parse_header, parse_survey_file
 
-FILEPATH = 'test_input_file.csv'
+FILEPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_input_file.csv')
 
 class TestFileParser(unittest.TestCase):
 
