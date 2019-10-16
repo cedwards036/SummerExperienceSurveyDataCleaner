@@ -1,17 +1,9 @@
-import json
-
-from src.data_loading.file_parser import parse_survey_file
-from src.data_loading.row_splitter import split_response_rows
-from src.data_loading.response_parser import parse_raw_responses
-from definitions import CONFIG_PATH
-
-def load_config() -> dict:
-    with open(CONFIG_PATH, encoding='utf-8') as file:
-        return json.load(file)
+from src.data_loading.load_survey_data import load_survey_data
+from src.utils import list_of_dicts_to_csv, load_config
 
 if __name__ == '__main__':
-    raw_data = parse_survey_file(load_config()['response_data_filepath'])
-    split_data = split_response_rows(raw_data)
-    parsed_responses = parse_raw_responses(split_data)
-    for response in parsed_responses:
+    survey_data = load_survey_data()
+    survey_data_dicts = [response.to_dict() for response in survey_data]
+    list_of_dicts_to_csv(load_config()['output_filepath'], survey_data_dicts)
+    for response in survey_data:
         print(response.to_dict())
