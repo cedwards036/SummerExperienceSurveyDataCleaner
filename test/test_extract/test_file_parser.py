@@ -1,6 +1,6 @@
 import unittest
 import os
-from src.data_loading.file_parser import parse_header, parse_survey_file
+from src.extract.file_parser import parse_header, parse_survey_file
 
 FILEPATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_input_file.csv')
 

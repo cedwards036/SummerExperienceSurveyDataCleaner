@@ -1,13 +1,13 @@
 from typing import List
 
-from src.data_loading.file_parser import parse_survey_file
-from src.data_loading.row_splitter import split_response_rows
-from src.data_loading.response_parser import parse_raw_responses
-from src.data_loading.row_differentiator import RowDifferentiator
+from src.extract.file_parser import parse_survey_file
+from src.extract.row_splitter import split_response_rows
+from src.extract.response_parser import parse_raw_responses
+from src.extract.row_differentiator import RowDifferentiator
 from src.survey_response import SurveyResponse
 from src.utils import load_config
 
-def load_survey_data() -> List[SurveyResponse]:
+def extract_survey_data() -> List[SurveyResponse]:
     row_differentiator = make_row_differentiator()
     raw_data = parse_survey_file(load_config()['response_data_filepath'])
     split_data = split_response_rows(raw_data, row_differentiator)

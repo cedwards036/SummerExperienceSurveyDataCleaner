@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from src.data_loading.response_parser import RawResponseParser, parse_raw_responses
+from src.extract.response_parser import RawResponseParser, parse_raw_responses
 from src.survey_response import SurveyResponse
 
 

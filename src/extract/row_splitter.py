@@ -1,6 +1,6 @@
 from typing import List
 import re
-from src.data_loading.row_differentiator import RowDifferentiator
+from src.extract.row_differentiator import RowDifferentiator
 
 
 class _CompoundQuestion:

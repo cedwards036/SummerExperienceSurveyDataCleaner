@@ -1,7 +1,7 @@
 import unittest
 
-from src.data_loading.row_differentiator import RowDifferentiator
-from src.data_loading.row_splitter import _split_row_into_multiple_responses, split_response_rows
+from src.extract.row_differentiator import RowDifferentiator
+from src.extract.row_splitter import _split_row_into_multiple_responses, split_response_rows
 
 
 class TestRowSplitter(unittest.TestCase):
