@@ -1,5 +1,6 @@
 from typing import List
 import re
+from src.data_loading.row_differentiator import RowDifferentiator
 
 
 class _CompoundQuestion:
@@ -12,12 +13,17 @@ class _CompoundQuestion:
 
 class _QuestionGroup:
 
-    def __init__(self):
+    def __init__(self, id: str):
+        self._id = id
         self._questions = []
         self._has_answers = False
 
     def add_question(self, question: _CompoundQuestion):
         self._questions.append(question)
+
+    @property
+    def id(self) -> str:
+        return self._id
 
     @property
     def questions(self) -> List[_CompoundQuestion]:
@@ -41,7 +47,7 @@ class _HeaderClassification:
 
     def add_question_to_multi_group(self, question: _CompoundQuestion):
         if question.group not in self._multi_questions:
-            self._multi_questions[question.group] = _QuestionGroup()
+            self._multi_questions[question.group] = _QuestionGroup(question.group)
         self._multi_questions[question.group].add_question(question)
 
     def add_single_question(self, question: str):
@@ -108,8 +114,9 @@ class _HeaderClassificationBuilder:
 
 class _MultiResponseBuilder:
 
-    def __init__(self, row):
+    def __init__(self, row: dict, row_differentiator: RowDifferentiator):
         self._row = row
+        self._row_differentiator = row_differentiator
         self._header_classification = _HeaderClassificationBuilder(row).build()
 
     def build(self) -> List[dict]:
@@ -146,6 +153,10 @@ class _MultiResponseBuilder:
     def _enrich_row_with_question_group(self, row: dict, source_row: dict, question_group: _QuestionGroup) -> dict:
         for question in question_group.questions:
             row[question.question] = source_row[question.full_question_str]
+        return self._enrich_row_with_differentiator(row, question_group)
+
+    def _enrich_row_with_differentiator(self, row: dict, question_group: _QuestionGroup) -> dict:
+        row[self._row_differentiator.field_name] = self._row_differentiator.get_mapping_for_id(question_group.id)
         return row
 
     def _get_random_question_group(self) -> _QuestionGroup:
@@ -153,8 +164,8 @@ class _MultiResponseBuilder:
         return self._header_classification.multi_questions[question_groups[0]]
 
 
-def _split_row_into_multiple_responses(row: dict) -> List[dict]:
-    return _MultiResponseBuilder(row).build()
+def _split_row_into_multiple_responses(row: dict, row_differentiator: RowDifferentiator) -> List[dict]:
+    return _MultiResponseBuilder(row, row_differentiator).build()
 
 def _all_rows_have_the_same_keys(response_rows: List[dict]) -> bool:
     keys = response_rows[0].keys()
@@ -163,11 +174,11 @@ def _all_rows_have_the_same_keys(response_rows: List[dict]) -> bool:
             return False
     return True
 
-def split_response_rows(response_rows: List[dict]) -> List[dict]:
+def split_response_rows(response_rows: List[dict], row_differentiator: RowDifferentiator) -> List[dict]:
     result = []
     if not _all_rows_have_the_same_keys(response_rows):
         raise ValueError('All rows must have the same column names')
     else:
         for row in response_rows:
-            result += _split_row_into_multiple_responses(row)
+            result += _split_row_into_multiple_responses(row, row_differentiator)
         return result
